@@ -76,7 +76,7 @@ class ParkingMapGenerator:
         
         # Parâmetros Geométricos (Default ou Config)
         self.MAP_WIDTH = self.cfg.get('map_width', 250.0)
-        self.MAP_HEIGHT = self.cfg.get('map_height', 250.0)
+        self.MAP_HEIGHT = self.cfg.get('map_height', 450.0)
         self.WALL_WIDTH = 4.0
         
         # Vagas (Ajustado para caber um caminhão/carreta?)
@@ -86,7 +86,7 @@ class ParkingMapGenerator:
         
         self.SPAWN_PADDING = 25.0
         self.WALL_PADDING = 3.0
-        self.N_ROWS = 2 # Fileira superior e inferior
+        self.N_ROWS = 1 # Fileira superior e inferior
 
     def generate_map(self) -> Map:
         game_map = Map((self.MAP_WIDTH, self.MAP_HEIGHT))
@@ -189,7 +189,19 @@ class ParkingMapGenerator:
         # Aqui, colocamos o veículo estacionado em outra vaga (cenário de manobra de saída/troca)
         # Se quiser nascer no corredor (aisle), crie uma entidade no meio do mapa.
         start_entity.type = MapEntity.ENTITY_START 
-        game_map.start_pose = start_entity
+        
+        # Ajuste de Posição: Avançar o veículo para não colidir com a parede traseira
+        # O trailer é longo e o eixo traseiro (centro da vaga) faz a traseira bater no muro.
+        shift_amount = 4.0 # Metros para frente
+        
+        game_map.start_pose = MapEntity(
+            position_x=start_entity.position_x + shift_amount * math.cos(start_entity.theta),
+            position_y=start_entity.position_y + shift_amount * math.sin(start_entity.theta),
+            width=start_entity.width,
+            length=start_entity.length,
+            theta=start_entity.theta,
+            type=MapEntity.ENTITY_START
+        )
 
         # --- 5. Obstáculos (Carros Estacionados) ---
         for slot in slots:
