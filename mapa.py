@@ -75,14 +75,14 @@ class ParkingMapGenerator:
         self.cfg = config or {}
         
         # Parâmetros Geométricos (Default ou Config)
-        self.MAP_WIDTH = self.cfg.get('map_width', 150.0)
-        self.MAP_HEIGHT = self.cfg.get('map_height', 150.0)
+        self.MAP_WIDTH = self.cfg.get('map_width', 250.0)
+        self.MAP_HEIGHT = self.cfg.get('map_height', 250.0)
         self.WALL_WIDTH = 4.0
         
         # Vagas (Ajustado para caber um caminhão/carreta?)
         # Vagas de carro costumam ser 2.5x5.0m. Para caminhão precisamos de mais.
         self.PARKING_SLOT_WIDTH = 6.0 
-        self.PARKING_SLOT_HEIGHT = 16.0 
+        self.PARKING_SLOT_HEIGHT = 14.0 
         
         self.SPAWN_PADDING = 25.0
         self.WALL_PADDING = 3.0

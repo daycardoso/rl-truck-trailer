@@ -102,4 +102,4 @@ def get_privileged_coordinates(
     # Empilhamento final
     z = torch.stack([z1, z2, z3, z4], dim=1)
     
-    return z
+    return z / 100
