@@ -82,7 +82,7 @@ class ParkingMapGenerator:
         # Vagas (Ajustado para caber um caminhão/carreta?)
         # Vagas de carro costumam ser 2.5x5.0m. Para caminhão precisamos de mais.
         self.PARKING_SLOT_WIDTH = 6.0 
-        self.PARKING_SLOT_HEIGHT = 14.0 
+        self.PARKING_SLOT_HEIGHT = 17.0 
         
         self.SPAWN_PADDING = 25.0
         self.WALL_PADDING = 3.0
@@ -124,7 +124,7 @@ class ParkingMapGenerator:
         top_row_y = self.MAP_HEIGHT / 3.0
         bottom_row_y = 2.0 * self.MAP_HEIGHT / 3.0
         
-        area_width = self.MAP_WIDTH - 2 * self.SPAWN_PADDING
+        area_width = self.MAP_WIDTH - 3 * self.SPAWN_PADDING
         
         # Parede Central Superior (Backstop das vagas de cima)
         game_map.add_entity(MapEntity(
@@ -141,8 +141,8 @@ class ParkingMapGenerator:
         ))
 
         # --- 3. Geração das Vagas ---
-        start_x = self.SPAWN_PADDING + self.PARKING_SLOT_WIDTH/2
-        end_x = self.MAP_WIDTH - self.SPAWN_PADDING - self.PARKING_SLOT_WIDTH/2
+        start_x = self.SPAWN_PADDING*2 + self.PARKING_SLOT_WIDTH/2
+        end_x = self.MAP_WIDTH - self.SPAWN_PADDING*2 - self.PARKING_SLOT_WIDTH/2
         
         current_x = start_x
         while current_x <= end_x:
@@ -181,8 +181,15 @@ class ParkingMapGenerator:
         goal_slot.type = MapEntity.ENTITY_PARKING_GOAL
         game_map.parking_goal = goal_slot
         
-        # Escolhe Partida (Garantindo que não é o mesmo)
-        available_starts = [s for s in slots if s != goal_slot]
+        # Escolhe Partida (Garantindo que está na fileira oposta)
+        # Se goal_slot.theta < 0 (Cima), queremos theta > 0 (Baixo).
+        # Se goal_slot.theta > 0 (Baixo), queremos theta < 0 (Cima).
+        available_starts = [s for s in slots if s != goal_slot and (s.theta * goal_slot.theta < 0)]
+        
+        if not available_starts:
+            # Fallback caso não encontre (ex: mapa muito pequeno ou erro de geração)
+            available_starts = [s for s in slots if s != goal_slot]
+
         start_entity = random.choice(available_starts)
         
         # O "MapEntity" de start define a POSE inicial do veículo.

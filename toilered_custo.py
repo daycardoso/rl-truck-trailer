@@ -75,4 +75,4 @@ def tailored_cost_function(z: torch.Tensor, u: torch.Tensor, weights: Optional[t
     total_cost_poly = state_cost + c_u + epsilon
     homogeneous_norm = torch.pow(total_cost_poly, 1.0 / 12.0)
 
-    return homogeneous_norm / 80
+    return homogeneous_norm 

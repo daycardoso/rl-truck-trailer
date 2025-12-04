@@ -252,7 +252,7 @@ class ParkingSimulator:
         self.dt = 0.05 # Passo de tempo fixo
         
         # 1. Mapa
-        self.map_gen = ParkingMapGenerator({'map_width': 100, 'map_height': 100})
+        self.map_gen = ParkingMapGenerator({'map_width': 200, 'map_height': 200})
         self.map = self.map_gen.generate_map()
         self.obstacles = self.map.get_obstacles_tensor().to(self.device)
         

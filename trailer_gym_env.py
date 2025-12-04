@@ -140,8 +140,15 @@ class TrailerDockingEnv(gym.Env):
             reward -= 200.0 # Penalidade Alta
             terminated = True
             
-        # Sucesso: Se a norma homogênea for muito pequena (< 0.5 é um bom threshold inicial)
-        if rho.item() < 0.4:
+        # Sucesso: Distância < 2m e Erro Theta < 15 graus
+        # State: [x, y, theta, beta]
+        dist_error = torch.norm(self.state[0, :2] - self.goal[0, :2])
+        theta_error = torch.abs(self.state[0, 2] - self.goal[0, 2])
+        # Normalizar erro angular para [-pi, pi]
+        theta_error = (theta_error + math.pi) % (2 * math.pi) - math.pi
+        theta_error = torch.abs(theta_error)
+        
+        if dist_error < 2.0 and theta_error < math.radians(15):
             reward += 100.0
             terminated = True
             # print("SUCCESS! Parked.")
@@ -159,7 +166,7 @@ class TrailerDockingEnv(gym.Env):
         return obs, reward, terminated, truncated, {"rho": rho.item()}
 
     def _get_obs(self, z=None, lidar=None):
-        """Monta o vetor de observação numpy."""
+        """Monta o vetor de observação numpy com normalização."""
         if z is None:
              z = get_privileged_coordinates(
                 self.state, self.goal,
@@ -168,17 +175,43 @@ class TrailerDockingEnv(gym.Env):
         if lidar is None:
             lidar = self.collision_sys.compute_lidar(self.state, self.obstacles)
 
-        # Normalização relativa ao objetivo para o estado global
-        # (Opcional, mas ajuda a rede: delta_x, delta_y, etc)
-        # Por enquanto, passamos estado bruto, pois Z já codifica o erro relativo.
+        # --- Normalização ---
+        
+        # 1. State [x, y, theta, beta]
+        # Normaliza x, y pelo tamanho do mapa
+        # Normaliza ângulos por PI
+        state_norm = self.state.clone().squeeze(0)
+        state_norm[0] /= self.map_gen.MAP_WIDTH
+        state_norm[1] /= self.map_gen.MAP_HEIGHT
+        state_norm[2] /= math.pi
+        state_norm[3] /= math.pi
+
+        # 2. Privileged Coords [z1, z2, z3, z4]
+        # z1 (long), z3 (lat) -> Distâncias -> Normaliza por 100.0 (escala aproximada do mapa)
+        # z2 (ornt), z4 (art) -> Ângulos -> Normaliza por PI
+        z_norm = z.clone().squeeze(0)
+        z_norm[0] /= 100.0
+        z_norm[1] /= math.pi
+        z_norm[2] /= 100.0
+        z_norm[3] /= math.pi
+
+        # 3. LiDAR
+        # Normaliza LiDAR 0-100m -> 0-1
+        lidar_norm = lidar.squeeze(0) / 100.0
+
+        # 4. Last Action [v, alpha]
+        # Normaliza pelos máximos físicos para voltar ao range [-1, 1]
+        action_norm = self.last_action.clone().squeeze(0)
+        action_norm[0] /= self.max_v
+        action_norm[1] /= self.max_alpha
         
         # Concatenar tudo em um vetor plano
         # State(4) + Z(4) + LiDAR(16) + LastAction(2)
         obs_tensor = torch.cat([
-            self.state.squeeze(0),      # 4
-            z.squeeze(0),               # 4
-            lidar.squeeze(0) / 100.0,   # 16 (Normaliza LiDAR 0-100m -> 0-1)
-            self.last_action.squeeze(0) # 2
+            state_norm,      # 4
+            z_norm,          # 4
+            lidar_norm,      # 16
+            action_norm      # 2
         ])
         
         return obs_tensor.cpu().numpy().astype(np.float32)
