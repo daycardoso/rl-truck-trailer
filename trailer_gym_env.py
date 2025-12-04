@@ -35,9 +35,9 @@ class TrailerDockingEnv(gym.Env):
         self.device = torch.device("cpu") # RL geralmente roda CPU-bound no step-by-step
         
         # 1. Componentes do Sistema
-        self.map_gen = ParkingMapGenerator({'map_width': 100, 'map_height': 100})
+        self.map_gen = ParkingMapGenerator({'map_width': 200, 'map_height': 200})
         
-        self.dynamics = VehicleDynamicsGPU(self.cfg, dt=0.05, device=self.device)
+        self.dynamics = VehicleDynamicsGPU(self.cfg, dt=0.1, device=self.device)
         self.collision_sys = CollisionAndSensorSystemGPU(self.cfg, self.device)
         self.geometry = VehicleGeometryGPU(self.cfg) # Apenas para render
         
@@ -151,7 +151,7 @@ class TrailerDockingEnv(gym.Env):
         if dist_error < 2.0 and theta_error < math.radians(15):
             reward += 100.0
             terminated = True
-            # print("SUCCESS! Parked.")
+            print("SUCCESS! Parked.")
 
         # Timeout
         self.steps += 1

@@ -21,7 +21,7 @@ class CollisionAndSensorSystemGPU:
         # --- Configuração LiDAR ---
         self.num_rays_per_sensor = 8
         self.lidar_range = 100.0
-        self.jackknife_limit = math.radians(65) # Limite de 90 graus para articulação
+        self.jackknife_limit = math.radians(75) # Limite de 90 graus para articulação
         
         # --- Configuração Geométrica (Discos de Colisão) ---
         # Mantemos a lógica dos discos para colisão física pois é muito rápida
